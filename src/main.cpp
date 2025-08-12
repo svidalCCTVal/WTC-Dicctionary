@@ -7,6 +7,9 @@ const char R_cmd[4]= "RRR";
 const char V_cmd[4]= "VVV";
 const char T_cmd[4]= "TTT";
 const char A_cmd[4]= "AAA";
+const char I_cmd[4]= "III";
+const char P_cmd[4]= "PPP"; // Parar
+const char H_cmd[4]= "HHH"; // Help 
 
 // Pines para control Puente-H de motores de desplazamiento
 const int ENA = 3;   // Enable motor izquierdo
@@ -50,7 +53,6 @@ Servo escA;
 Servo escB;
 
 // Funciones
-
 void moverMotorA(bool haciaDerecha, int velocidad);
 void moverMotorB(bool haciaDerecha, int velocidad);
 void detenerMotorA();
@@ -60,11 +62,45 @@ void controlarBrushless(bool haciaDerecha);
 void detenerBrushless();
 //void controlarDesplazamiento();
 
+// Estados 
+enum Estado{
+  Reposo, 
+  Derecha,
+  DerechaA, 
+  DerechaB,
+  Izquierda, 
+  IzquierdaA, 
+  IzquierdaB, 
+  Freno, 
+  Error  
+};
+
+// Robot 
+struct robot{
+  Estado estado;
+  int velocidad; 
+  int tiempo_operacion; 
+  int revoluciones[3];
+  int frecuencias[3]; 
+
+  /*VARIABLES GLOBALES DE LUCAS*/
+  /*
+  int speedsDerecha[10]={1500+160, 1500+120, 1500+220};
+  int speedsIzquierda[10]={1500-160, 1500-120, 1500-220};
+  int mode = 0;
+  unsigned long previousMillisBrushless = 0;
+  const unsigned long intervalBrushless = 500;
+  */ 
+};
 
 // String utilities
 int asignar_frecuencias(char * input_data, size_t len);
+int asignar_revoluciones(char * input_data, size_t len);
 
+// Instacia global de objeto Robot
+robot Robot; 
 
+// -------------------------  SETUP  ----------------------------
 void setup() {
   pinMode(ENA, OUTPUT);
   pinMode(IN1, OUTPUT);
@@ -87,8 +123,12 @@ void setup() {
   Serial.println("AAA");
 }
 
+// -------------------------  LOOP  ----------------------------
 void loop() {
-  // reply only when you receive data:
+
+  /* acá incluir polling de medición de frecuencia */
+
+  // Parseo de datos recibidos por serial
   if (Serial.available() > 0) {
     char input_serial[64];
     size_t len = Serial.readBytesUntil('\n', input_serial, sizeof(input_serial));
@@ -104,51 +144,102 @@ void loop() {
     strncpy(input_data,input_serial+3, data_len);
     input_data[data_len] = '\0';
 
-    if (!strcmp(input_cmd,F_cmd))
+    if (!strcmp(input_cmd,F_cmd)) // FFF asigna frecuencias pero no inicia operación
     {
       Serial.println("FFF yes");
       Serial.println(input_data);
-      //if(asignar_frecuencias(input_data, sizeof(input_data))){
-      //  Serial.println(A_cmd);
-      //};
-    } //RRR
-    else if (!strcmp(input_cmd,R_cmd))
-    {
-      Serial.println("FFF yes");
-    } /* //VVV
-    else if (!strcmp(input_cmd,F_cmd))
-    {
-      Serial.println("FFF yes");
-    } //TTT
-    else if (!strcmp(input_cmd,F_cmd))
-    {
-      Serial.println("FFF yes");
-    } //III
-    else if (!strcmp(input_cmd,F_cmd))
-    {
-      Serial.println("FFF yes");
-    }//PPP
-    else if (!strcmp(input_cmd,F_cmd))
-    {
-      Serial.println("FFF yes");
-    }//AAA
-    else if (!strcmp(input_cmd,F_cmd))
-    {
-      Serial.println("FFF yes");
+      if(asignar_frecuencias(input_data, sizeof(input_data))){
+        Robot.estado = Reposo; 
+        Serial.println(A_cmd);
+      } else
+      {
+        Serial.println(H_cmd);
+      }
+      
     }
-    */
+    else if (!strcmp(input_cmd,R_cmd)) // RRR asigna cantidad revoluciones en operación, no inicia operación
+    {
+      Serial.println("RRR yes");
+      if(asignar_revoluciones(input_data, sizeof(input_data))){       
+        Robot.estado = Reposo; 
+        Serial.println(A_cmd);
+      }; 
+    } 
+    else if (!strcmp(input_cmd,V_cmd)) // VVV asigna velocidad, no inicia operación
+    {
+      Serial.println("VVV yes");
+
+    } 
+    else if (!strcmp(input_cmd,T_cmd)) // TTT asigna tiempo de la rutina de trabajo
+    {
+      Serial.println("TTT yes");
+    } 
+    else if (!strcmp(input_cmd,I_cmd)) // III inicia rutina de movimiento
+    {
+      Serial.println("III yes");
+    }
+    else if (!strcmp(input_cmd,P_cmd)) // PPP detiene rutina da lo mismo el momento donde llegue el mensaje
+    {
+      Serial.println("PPP yes");
+
+    }
+    else if (!strcmp(input_cmd,A_cmd)) // AAA es respuesta del 
+    {
+      Serial.println("AAA yes");
+    }
+  }
+
+  switch (Robot.estado)
+  {
+  case Reposo:
+    // apagar todos los motores
+    break;
+  
+  case Derecha: 
+    break;
+
+  case DerechaA: 
+    break;
+
+  case DerechaB: 
+    break;
+
+  case Izquierda: 
+    break;
+
+  case IzquierdaA: 
+    break;
+
+  case IzquierdaB: 
+    break;
+
+  default:
+    break;
   }
 }
 
 
 // Funciones de diccionario
 int asignar_frecuencias(char * input_data, size_t len){ 
-    Serial.print("Datos recibidos: ");
-    Serial.println(input_data);
-    Serial.print("Largo máximo de buffer: ");
-    Serial.println(len);
-    return 1;
+
+  return 1;
 }
+
+int asignar_revoluciones(char * input_data, size_t len){
+  /* code */
+  return 1; 
+}
+
+int asignar_velocidad(char * input_data, size_t len){
+  /* code */
+  return 1; 
+}
+
+int asignar_tiempo(char * input_data, size_t len){
+  /* code */
+  return 1; 
+}
+
 
 // Funciones de control de movimiento
 
